@@ -1,6 +1,9 @@
 from marshmallow import Schema, fields, validate
 
 class UserSchema(Schema):
+    _id = fields.String(
+        required=False
+    )
     name = fields.String(
         required=True,
         error_messages={'required': 'Name is required.'} 
