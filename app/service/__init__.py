@@ -4,61 +4,61 @@ from bson.errors import InvalidId
 
 from app import mongo
 
-from app.schema.userSchema import UserSchema
-userSchema = UserSchema()
+from app.schema.todoSchema import TodoSchema
+todoSchema = TodoSchema()
 
 from app.commonMethods import serialize
 
-def get_all_user():
+def get_all_todo():
     res = []
     data = {}
-    for user in mongo.db.users.find():
-        data, error = userSchema.load(user)
-        data['_id'] = str(user['_id'])
+    for todo in mongo.db.todos.find():
+        data, error = todoSchema.load(todo)
+        data['_id'] = str(todo['_id'])
         res.append(data)
         print(res) 
     return jsonify({"result": res, "status": 200})
 
-def post_user():
+def post_todo():
     data = {}
-    user,error = userSchema.load(request.json)
+    todo,error = todoSchema.load(request.json)
     if error:
         return jsonify({"error": error, 'status': 404})
     else:
-        res = mongo.db.users.insert(user)
+        res = mongo.db.todos.insert(user)
         data = serialize(user)
         return jsonify({'result': data, 'status': 200})
 
-def get_user_By_ID(userId):
-    user = {}
+def get_todo_By_ID(todoID):
+    todo = {}
     data = {}
     try:
-        user = mongo.db.users.find_one({'_id': ObjectId(userId)})
+        todo = mongo.db.todos.find_one({'_id': ObjectId(todoID)})
     except InvalidId as err:
         return {"error": str(err), 'status':400}
-    if user is None:
-        return {"error": "No user found having this {0} id ".format(userId), 'status':404}
+    if todo is None:
+        return {"error": "No Task found having this {0} id ".format(todoID), 'status':404}
     else:
-        data = serialize(user)
+        data = serialize(todo)
     return jsonify({'result': data,'status':200})
 
-def patch_user_By_ID(userId):
-    user = request.json
-    query = {"$set" : user}
+def patch_todo_By_ID(todoID):
+    todo = request.json
+    query = {"$set" : todo}
     try:
-        res = mongo.db.users.update({'_id': ObjectId(userId)}, query)
+        res = mongo.db.todos.update({'_id': ObjectId(todoID)}, query)
         if res["n"] == 0:
-            return jsonify({"message": "No user to delete having this {0} id ".format(userId), 'status':404})
+            return jsonify({"message": "No Task to delete having this {0} id ".format(todoID), 'status':404})
         else:
             return jsonify({'result': res,'status':200}) 
     except InvalidId as err:
         return {"error": str(err), 'status':400}
 
-def delete_user_By_ID(userId):
+def delete_todo_By_ID(todoID):
     try:
-        res = mongo.db.users.remove({'_id': ObjectId(userId)})
+        res = mongo.db.todos.remove({'_id': ObjectId(todoID)})
         if res["n"] == 0:
-            return jsonify({"message": "No user to delete having this {0} id ".format(userId), 'status':404})
+            return jsonify({"message": "No user to delete having this {0} id ".format(todoID), 'status':404})
         else:
             return jsonify({'result': res,'status':200})
     except InvalidId as err:
