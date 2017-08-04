@@ -25,8 +25,8 @@ def post_todo():
     if error:
         return jsonify({"error": error, 'status': 404})
     else:
-        res = mongo.db.todos.insert(user)
-        data = serialize(user)
+        res = mongo.db.todos.insert(todo)
+        data = serialize(todo)
         return jsonify({'result': data, 'status': 200})
 
 def get_todo_By_ID(todoID):
@@ -44,13 +44,17 @@ def get_todo_By_ID(todoID):
 
 def patch_todo_By_ID(todoID):
     todo = request.json
+    todo.pop('_id', None)
+    todo.pop('edtiMode', None)
     query = {"$set" : todo}
+
     try:
         res = mongo.db.todos.update({'_id': ObjectId(todoID)}, query)
+        print(res)
         if res["n"] == 0:
             return jsonify({"message": "No Task to delete having this {0} id ".format(todoID), 'status':404})
         else:
-            return jsonify({'result': res,'status':200}) 
+            return jsonify({'result': "Success",'status':200}) 
     except InvalidId as err:
         return {"error": str(err), 'status':400}
 
@@ -58,8 +62,8 @@ def delete_todo_By_ID(todoID):
     try:
         res = mongo.db.todos.remove({'_id': ObjectId(todoID)})
         if res["n"] == 0:
-            return jsonify({"message": "No user to delete having this {0} id ".format(todoID), 'status':404})
+            return jsonify({"message": "No todo to delete having this {0} id ".format(todoID), 'status':404})
         else:
-            return jsonify({'result': res,'status':200})
+            return jsonify({'result': "Success",'status':200})
     except InvalidId as err:
         return {"error": str(err), 'status':400}

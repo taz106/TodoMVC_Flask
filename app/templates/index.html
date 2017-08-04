@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Todo Flask</title>
+
+        <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <!-- Custom styles for this template -->
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
+
+         <!-- <script src="./templates/index.todoCtrl.js"></script>
+        <script src="./templates/index.todoService.js"></script>  -->
+        <!-- <script src="{{ url_for('static', filename='index.todoCtrl.js') }}"></script>
+        <script src="{{ url_for('static', filename='index.todoService.js') }}"></script> -->
+    </head>
+
+  <body ng-app="todoMVC" ng-controller="todoCtrl">
+      
+    <div style="margin:2em;">
+        <form name="todoForm" novalidate>
+            <div class="form-group">
+                <label for="title">Task Title:</label>
+                <input class="form-control" id="title" ng-model="todo.title" required>
+            </div>
+            <div class="form-group">
+                <label for="desc">Task Description:</label>
+                <textarea class="form-control" id="desc" ng-model="todo.desc" required></textarea>
+            </div>
+            <!-- <div class="checkbox">
+                <label><input type="checkbox"> Remember me</label>
+            </div> -->
+            <p ng-show="err" style="color:red;">Submit all Fields</p>
+            <button class="btn btn-primary" ng-click="submit(todoForm)">Submit</button>
+        </form>
+        <br/><br/>
+        <div ng-show="empty" style="color:red;">
+            <p>No Data to display</p>
+        </div>
+
+        <div ng-hide="empty" class="table-responsive;" >
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <!-- <th>Email</th> -->
+                </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="todo in todoList track by $index">
+                        <td ng-show="!todo.editMode" ng-bind="todo.title"></td>
+                        <td ng-show="todo.editMode">
+                            <input ng-model="todo.title" required>
+                        </td>
+                        <td ng-show="!todo.editMode" ng-bind="todo.desc"></td>
+                        <td ng-show="todo.editMode">
+                            <textarea ng-model="todo.desc" required></textarea>
+                        </td>
+                        <td ng-show="!todo.editMode">
+                            <button class="btn btn-success" ng-click="edit($index)">Edit</button>
+                            <button class="btn btn-danger" ng-click="delete($index)">Delete</button>
+                        </td>
+                        <td ng-show="todo.editMode">
+                            <button class="btn btn-primary" ng-click="save($index)">Save</button>
+                            <button class="btn btn-danger" ng-click="cancel($index)">Cancel</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        angular.module("todoMVC", [])
+        .controller("todoCtrl",["$scope","$http", function($scope, $http){
+            $scope.empty = true;
+            $scope.err = false;
+            $scope.todoList = [];
+            $scope.todo = {title: "", desc: ""};
+
+            (function(){
+                $http.get("/api/v1/todo")
+                .then(
+                    function(res){
+                        $scope.todoList = res.data.result;
+                        if(!$scope.todoList.length) $scope.empty = true;
+                        else{
+                            $scope.empty = false;
+                            for(todo in $scope.todoList) todo.editMode = false;
+                        }
+                    }, function(err) {
+                        console.log(err);
+                    })
+            })();
+
+            $scope.submit = function(form) {
+                if(!form.$valid) $scope.err = true;
+                else {
+                    $scope.err = false;
+                    $http.post("/api/v1/todo", $scope.todo)
+                    .then(function(res){
+                        $scope.todoList.unshift($scope.todo);
+                        $scope.todo = {};
+                        console.log(res);
+                        console.log($scope.todoList);
+                    }, function(err) {
+                        console.log(err);
+                    })
+                }
+            }
+
+            $scope.edit = function(id) {
+                $scope.todoList[id].editMode = true;
+            }
+
+            $scope.save = function(id) {
+                let todo = $scope.todoList[id];
+                $http.patch("/api/v1/todo/"+todo._id, todo)
+                .then(function(res){
+                    $scope.todoList[id].editMode = false;
+                })
+            }
+
+            $scope.delete = function(id) {
+                if(confirm("Are you sure to Delete this task?")) {
+                    let todo = $scope.todoList[id];
+                    $http.delete("/api/v1/todo/"+todo._id, todo)
+                    .then(function(res){
+                        $scope.todoList.splice(id, 1);
+                    })
+                }
+            }
+
+            $scope.cancel = function(id) {
+                $scope.todoList[id].editMode = false;
+            }
+
+        }])
+    </script>
+
+  </body>
+
+</html>

@@ -6,9 +6,9 @@ class TodoSchema(Schema):
     )
     title = fields.String(
         required=True,
-        error_messages={'required': 'Name is required.'} 
+        error_messages={'required': 'Title is required.'} 
     )
-    description = fields.String(
+    desc = fields.String(
         required=False
     )
     
